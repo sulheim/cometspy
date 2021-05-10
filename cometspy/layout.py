@@ -5,7 +5,7 @@ import re
 import math
 
 from cometspy.model import model
-
+from pathlib import Path
 
 
 
@@ -1056,8 +1056,8 @@ class layout:
         # right now we only check if a user manually set a diff_c.  Ideally,
         # we should check for manual changes to everything. Alternatively,
         # we should print all blocks no matter what. 
-        self.__check_if_diffusion_flag_should_be_set()
-        outfile = working_dir + ".current_layout"
+        # self.__check_if_diffusion_flag_should_be_set()
+        outfile = str(Path(working_dir) / ".current_layout")
         if os.path.isfile(outfile):
             os.remove(outfile)
 

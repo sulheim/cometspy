@@ -16,6 +16,7 @@ import os
 import glob
 import numpy as np
 import platform
+from pathlib import Path
 
 __author__ = "Djordje Bajic, Jean Vila, Jeremy Chacon"
 __copyright__ = "Copyright 2019, The COMETS Consortium"
@@ -121,7 +122,7 @@ class comets:
 
 
         # define instance variables
-        self.working_dir = os.getcwd() + '/' + relative_dir
+        self.working_dir = (Path(os.getcwd()) / relative_dir).resolve()
         try:
             self.GUROBI_HOME = os.environ['GUROBI_COMETS_HOME']
             os.environ['GUROBI_HOME'] = self.GUROBI_HOME
@@ -354,12 +355,12 @@ class comets:
             self.parameters.all_params['writeBiomassLog'] = True
 
         # write the files for comets in working_dir
-        c_global = self.working_dir + '.current_global'
-        c_package = self.working_dir + '.current_package'
-        c_script = self.working_dir + '.current_script'
+        c_global = self.working_dir / '.current_global'
+        c_package = self.working_dir / '.current_package'
+        c_script = self.working_dir / '.current_script'
 
-        self.layout.write_necessary_files(self.working_dir)
-        # self.layout.write_layout(self.working_dir + '.current_layout')
+        self.layout.write_necessary_files(str(self.working_dir))
+        # self.layout.write_layout(self.working_dir / '.current_layout')
         self.parameters.write_params(c_global, c_package)
 
         if os.path.isfile(c_script):
@@ -401,41 +402,41 @@ class comets:
         # Read total biomass output
         if self.parameters.all_params['writeTotalBiomassLog']:
             tbmf = _readlines_file(
-                self.working_dir + self.parameters.all_params['TotalBiomassLogName'])
+                str(self.working_dir / self.parameters.all_params['TotalBiomassLogName']))
             self.total_biomass = pd.DataFrame([re.split(r'\t+', x.strip())
                                                for x in tbmf],
                                               columns=['cycle'] +
                                               self.layout.get_model_ids())
             self.total_biomass = self.total_biomass.astype('float')
             if delete_files:
-                os.remove(self.working_dir + self.parameters.all_params['TotalBiomassLogName'])
+                os.remove(str(self.working_dir / self.parameters.all_params['TotalBiomassLogName']))
 
         # Read flux
         if self.parameters.all_params['writeFluxLog']:
 
             max_rows = 4 + max([len(m.reactions) for m in self.layout.models])
 
-            self.fluxes = pd.read_csv(self.working_dir + self.parameters.all_params['FluxLogName'],
+            self.fluxes = pd.read_csv(self.working_dir / self.parameters.all_params['FluxLogName'],
                                       delim_whitespace=True,
                                       header=None, names=range(max_rows))
             if delete_files:
-                os.remove(self.working_dir + self.parameters.all_params['FluxLogName'])
+                os.remove(self.working_dir / self.parameters.all_params['FluxLogName'])
             self.__build_readable_flux_object()
 
         # Read media logs
         if self.parameters.all_params['writeMediaLog']:
-            self.media = pd.read_csv(self.working_dir + self.parameters.all_params[
+            self.media = pd.read_csv(self.working_dir / self.parameters.all_params[
                 'MediaLogName'], delim_whitespace=True, names=('metabolite',
                                                                'cycle', 'x',
                                                                'y',
                                                                'conc_mmol'))
 
             if delete_files:
-                os.remove(self.working_dir + self.parameters.all_params['MediaLogName'])
+                os.remove(self.working_dir / self.parameters.all_params['MediaLogName'])
 
         # Read spatial biomass log
         if self.parameters.all_params['writeBiomassLog']:
-            biomass_out_file = self.working_dir + 'biomass_log_' + hex(id(self))
+            biomass_out_file = self.working_dir / 'biomass_log_{0}'.format(hex(id(self)))
             self.biomass = pd.read_csv(biomass_out_file,
                                        header=None, delimiter=r'\s+',
                                        names=['cycle', 'x', 'y',
@@ -449,21 +450,21 @@ class comets:
         # Read evolution-related logs
         if 'evolution' in list(self.parameters.all_params.keys()):
             if self.parameters.all_params['evolution']:
-                genotypes_out_file = self.working_dir + 'GENOTYPES_biomass_log_' + hex(id(self))
+                genotypes_out_file = self.working_dir / 'GENOTYPES_biomass_log_'.format(hex(id(self)))
                 self.genotypes = pd.read_csv(genotypes_out_file,
                                              header=None, delimiter=r'\s+',
                                              names=['Ancestor',
                                                     'Mutation',
                                                     'Species'])
                 if delete_files:
-                    os.remove(self.working_dir + genotypes_out_file)
+                    os.remove(self.working_dir / genotypes_out_file)
 
         # Read specific media output
         if self.parameters.all_params['writeSpecificMediaLog']:
-            spec_med_file = self.working_dir + self.parameters.all_params['SpecificMediaLogName']
+            spec_med_file = self.working_dir / self.parameters.all_params['SpecificMediaLogName']
             self.specific_media = pd.read_csv(spec_med_file, delimiter=r'\s+')
             if delete_files:
-                os.remove(self.working_dir + self.parameters.all_params['SpecificMediaLogName'])
+                os.remove(self.working_dir / self.parameters.all_params['SpecificMediaLogName'])
 
         # clean workspace
         if delete_files:
@@ -471,8 +472,8 @@ class comets:
             os.remove(c_global)
             os.remove(c_package)
             os.remove(c_script)
-            os.remove(self.working_dir + '.current_layout')
-            os.remove(self.working_dir + 'COMETS_manifest.txt')  # todo: stop writing this in java
+            os.remove(self.working_dir / '.current_layout')
+            os.remove(self.working_dir / 'COMETS_manifest.txt')  # todo: stop writing this in java
         print('Done!')
 
     def __build_readable_flux_object(self):
@@ -500,6 +501,7 @@ class comets:
             self.fluxes_by_species[model_id] = sub_df
             
     def __analyze_run_output(self):
+        print(self.run_output)
         if "End of simulation" in self.run_output:
             return
         else:

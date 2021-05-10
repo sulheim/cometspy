@@ -4,7 +4,7 @@ import numpy as np
 import re
 import cobra
 import io
-
+from pathlib import Path
 
 
 class model:
@@ -831,7 +831,7 @@ class model:
         path_to_delete = ""
         if working_dir is not None:
             path_to_delete = working_dir
-        path_to_delete = path_to_delete + self.id + '.cmd'
+        path_to_delete = Path(path_to_delete) / '{0}.cmd'.format(self.id)
         os.remove(path_to_delete)
         
     def write_comets_model(self, working_dir : str =None):
@@ -852,7 +852,7 @@ class model:
         path_to_write = ""
         if working_dir is not None:
             path_to_write = working_dir
-        path_to_write = path_to_write + self.id + '.cmd'
+        path_to_write = Path(path_to_write) / '{0}.cmd'.format(self.id)
 
         # format variables for writing comets model
         bnd = self.reactions.loc[(self.reactions['LB']
