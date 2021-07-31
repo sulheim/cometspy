@@ -355,9 +355,9 @@ class comets:
             self.parameters.all_params['writeBiomassLog'] = True
 
         # write the files for comets in working_dir
-        c_global = self.working_dir / '.current_global'
-        c_package = self.working_dir / '.current_package'
-        c_script = self.working_dir / '.current_script'
+        c_global = str(self.working_dir / '.current_global')
+        c_package = str(self.working_dir / '.current_package')
+        c_script = str(self.working_dir / '.current_script')
 
         self.layout.write_necessary_files(str(self.working_dir))
         # self.layout.write_layout(self.working_dir / '.current_layout')
